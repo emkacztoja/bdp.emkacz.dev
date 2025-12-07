@@ -2,9 +2,9 @@ FROM node:20-alpine AS build
 WORKDIR /app
 ARG VITE_API_ORIGIN
 ENV VITE_API_ORIGIN=$VITE_API_ORIGIN
-COPY package.json package-lock.json* ./
+COPY packages/web/package.json packages/web/package-lock.json* ./
 RUN npm ci
-COPY . .
+COPY packages/web/ ./
 RUN npm run build
 
 FROM nginx:stable-alpine

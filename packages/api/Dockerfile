@@ -1,10 +1,12 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package.json package-lock.json* ./
+# Copy API package manifest and install
+COPY packages/api/package.json packages/api/package-lock.json* ./
 RUN npm ci --ignore-scripts
-COPY prisma ./prisma
-COPY src ./src
-COPY tsconfig*.json ./
+# Copy prisma and source from packages/api
+COPY packages/api/prisma ./prisma
+COPY packages/api/src ./src
+COPY packages/api/tsconfig*.json ./
 # generate prisma client
 RUN npx prisma generate --schema=prisma/schema.prisma
 RUN npm run build
@@ -12,7 +14,8 @@ RUN npm run build
 FROM node:20-alpine
 WORKDIR /app
 COPY --from=builder /app/dist ./dist
-COPY package.json ./
+# Copy package.json from API package so we can install production deps
+COPY packages/api/package.json ./
 RUN npm ci --production --ignore-scripts
 ENV NODE_ENV=production
 EXPOSE 3000
