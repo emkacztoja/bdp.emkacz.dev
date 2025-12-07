@@ -1,0 +1,24 @@
+{
+  "name": "bdp-worker",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0",
+    "bullmq": "^1.70.0",
+    "ioredis": "^5.3.2",
+    "discord.js": "^14.16.0",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.0.0"
+  }
+}
+

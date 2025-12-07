@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  role         Role      @relation(fields: [roleId], references: [id])
+  roleId       String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  bots         Bot[]
+  auditLogs    AuditLog[]
+}
+
+model Role {
+  id    String  @id @default(cuid())
+  name  String  @unique
+  users User[]
+}
+
+model Bot {
+  id              String    @id @default(cuid())
+  name            String
+  tokenEncrypted  String
+  tokenNonce      String
+  ownerId         String
+  owner           User      @relation(fields: [ownerId], references: [id])
+  guilds          Guild[]
+  active          Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastConnectedAt DateTime?
+  messageLogs     MessageLog[]
+  auditLogs       AuditLog[]
+}
+
+model MessageLog {
+  id        String        @id @default(cuid())
+  botId     String
+  bot       Bot           @relation(fields: [botId], references: [id])
+  guildId   String?
+  channelId String
+  content   String
+  status    MessageStatus @default(PENDING)
+  error     String?
+  attempts  Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model Guild {
+  id             String   @id @default(cuid())
+  guildSnowflake String   @unique
+  botId          String
+  bot            Bot      @relation(fields: [botId], references: [id])
+  name           String?
+  joinedAt       DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id])
+  botId     String?
+  bot       Bot?     @relation(fields: [botId], references: [id])
+  action    String
+  detail    Json?
+  ip        String?
+  createdAt DateTime @default(now())
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  FAILED
+  RETRYING
+}
+

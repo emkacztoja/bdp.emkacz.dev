@@ -1,0 +1,105 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bdp
+      POSTGRES_USER: bdp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bdpchange}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - proxy
+      - backend
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+
+  api:
+    build:
+      context: ./packages/api
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: ${API_PORT:-3000}
+    # For production behind Nginx Proxy Manager you can remove the "ports" block so the service is only accessible via the Docker network.
+    ports:
+      - "3000:3000"
+    networks:
+      - proxy
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- --timeout=2 http://localhost:3000/api/ready || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    build:
+      context: ./packages/worker
+    env_file: .env
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+    networks:
+      - backend
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./packages/web
+      args:
+        - VITE_API_ORIGIN=${VITE_API_ORIGIN}
+    env_file: .env
+    depends_on:
+      - api
+    environment:
+      VITE_API_ORIGIN: ${VITE_API_ORIGIN}
+    # For production behind Nginx Proxy Manager you can remove published ports and let NPM route traffic to container name and port.
+    ports:
+      - "5173:5173"
+    networks:
+      - proxy
+      - backend
+    restart: unless-stopped
+
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "81:81"
+      - "443:443"
+    volumes:
+      - ./data/nginx/data:/data
+      - ./data/nginx/letsencrypt:/etc/letsencrypt
+    networks:
+      - proxy
+
+volumes:
+  db_data:
+  redis_data:
+
+networks:
+  proxy:
+    driver: bridge
+  backend:
+    driver: bridge
+
+# NOTE: Attach Nginx Proxy Manager container to the same 'proxy' network so it can resolve container names like 'web' and 'api'.
