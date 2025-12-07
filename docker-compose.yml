@@ -75,8 +75,7 @@ services:
     environment:
       VITE_API_ORIGIN: ${VITE_API_ORIGIN}
     # For production behind Nginx Proxy Manager you can remove published ports and let NPM route traffic to container name and port.
-    ports:
-      - "5173:5173"
+    # Removed host port mapping to avoid conflicts on systems that already expose port 5173.
     networks:
       - proxy
       - backend
