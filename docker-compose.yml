@@ -24,7 +24,8 @@ services:
 
   api:
     build:
-      context: ./packages/api
+      context: .
+      dockerfile: packages/api/Dockerfile
     env_file: .env
     depends_on:
       - postgres
@@ -49,7 +50,8 @@ services:
 
   worker:
     build:
-      context: ./packages/worker
+      context: .
+      dockerfile: packages/worker/Dockerfile
     env_file: .env
     depends_on:
       - redis
@@ -63,7 +65,8 @@ services:
 
   web:
     build:
-      context: ./packages/web
+      context: .
+      dockerfile: packages/web/Dockerfile
       args:
         - VITE_API_ORIGIN=${VITE_API_ORIGIN}
     env_file: .env
