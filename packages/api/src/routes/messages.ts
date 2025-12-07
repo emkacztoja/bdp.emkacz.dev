@@ -1,12 +1,14 @@
 import { Router } from 'express'
 import prisma from '../prisma-client'
 import { Queue } from 'bullmq'
+import Redis from 'ioredis'
 import auth from '../middleware/auth'
 
 const router = Router()
 
-const connection = { connection: { url: process.env.REDIS_URL || 'redis://localhost:6379' } as any }
-const queue = new Queue('messages', connection as any)
+const redisUrl = process.env.REDIS_URL || 'redis://redis:6379'
+const redis = new Redis(redisUrl)
+const queue = new Queue('messages', { connection: redis } as any)
 
 // POST / - enqueue a message to be sent by a bot
 router.post('/', auth, async (req, res) => {
@@ -38,4 +40,3 @@ router.post('/', auth, async (req, res) => {
 })
 
 export default router
-
