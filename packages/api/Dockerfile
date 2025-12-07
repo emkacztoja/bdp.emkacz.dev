@@ -25,6 +25,8 @@ RUN npm install --production --no-audit --no-fund || true
 # Copy generated Prisma client files from builder into final node_modules
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
+# Also copy prisma schema & migrations into final image so 'prisma migrate deploy' can run inside container
+COPY packages/api/prisma ./prisma
 ENV NODE_ENV=production
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD wget -qO- --timeout=2 http://localhost:3000/api/ready || exit 1
