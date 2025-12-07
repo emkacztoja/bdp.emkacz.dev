@@ -88,7 +88,7 @@ const worker = new Worker('messages', async (job) => {
     await prisma.messageLog.update({ where: { id: msg.id }, data: { status: 'FAILED', error: String(e?.message || e), attempts: msg.attempts + 1 } })
     throw e
   }
-}, { connection: { host: '127.0.0.1', port: 6379 } as any })
+}, { connection: { url: redisUrl } as any })
 
 worker.on('completed', (job) => console.log('Job completed', job.id))
 worker.on('failed', (job, err) => console.error('Job failed', job?.id, err))
