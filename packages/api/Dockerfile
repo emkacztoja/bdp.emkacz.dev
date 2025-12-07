@@ -8,6 +8,7 @@ COPY packages/api/prisma ./prisma
 COPY packages/api/src ./src
 COPY packages/api/tsconfig*.json ./
 # generate prisma client
+RUN npm install prisma@^5 --no-audit --no-fund || true
 RUN npx prisma generate --schema=prisma/schema.prisma
 RUN npm run build
 
@@ -17,6 +18,9 @@ COPY --from=builder /app/dist ./dist
 # Copy package.json from API package so we can install production deps
 COPY packages/api/package.json ./
 RUN npm install --production --no-audit --no-fund || true
+# Copy generated Prisma client files from builder into final node_modules
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
 ENV NODE_ENV=production
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD wget -qO- --timeout=2 http://localhost:3000/api/ready || exit 1

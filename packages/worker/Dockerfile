@@ -19,5 +19,8 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY packages/worker/package.json ./
 RUN npm install --production --no-audit --no-fund || true
+# Copy generated Prisma client files from builder into final node_modules
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
 ENV NODE_ENV=production
 CMD ["node", "dist/index.js"]
