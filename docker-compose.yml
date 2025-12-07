@@ -59,6 +59,7 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      REDIS_URL: ${REDIS_URL}
     networks:
       - backend
     restart: unless-stopped

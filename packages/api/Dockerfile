@@ -1,7 +1,7 @@
-FROM node:20-slim AS builder
+FROM node:20-bullseye-slim AS builder
 WORKDIR /app
 # Install build dependencies for Prisma
-RUN apt-get update && apt-get install -y curl ca-certificates build-essential python3 || true
+RUN apt-get update && apt-get install -y curl ca-certificates build-essential python3 --no-install-recommends || true
 # Copy API package manifest and install
 COPY packages/api/package.json packages/api/package-lock.json* ./
 RUN npm install --no-audit --no-fund --no-optional || true
@@ -14,10 +14,10 @@ RUN npm install prisma@^5 --no-audit --no-fund || true
 RUN npx prisma generate --schema=prisma/schema.prisma
 RUN npm run build
 
-FROM node:20-slim
+FROM node:20-bullseye-slim
 WORKDIR /app
-# Ensure runtime dependencies for Prisma
-RUN apt-get update && apt-get install -y ca-certificates libssl1.1 || true
+# Ensure runtime dependencies for Prisma (libssl1.1 on bullseye)
+RUN apt-get update && apt-get install -y ca-certificates libssl1.1 --no-install-recommends || true
 COPY --from=builder /app/dist ./dist
 # Copy package.json from API package so we can install production deps
 COPY packages/api/package.json ./
