@@ -82,18 +82,9 @@ services:
       - backend
     restart: unless-stopped
 
-  nginx-proxy-manager:
-    image: jc21/nginx-proxy-manager:latest
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "81:81"
-      - "443:443"
-    volumes:
-      - ./data/nginx/data:/data
-      - ./data/nginx/letsencrypt:/etc/letsencrypt
-    networks:
-      - proxy
+# NOTE: This compose intentionally does NOT start a bundled nginx-proxy-manager service because
+# an existing Nginx Proxy Manager container (`npm-app-1`) is running and already binds ports 80/443.
+# We will attach that container to the 'proxy' network so it can access these services by name.
 
 volumes:
   db_data:
@@ -104,5 +95,3 @@ networks:
     driver: bridge
   backend:
     driver: bridge
-
-# NOTE: Attach Nginx Proxy Manager container to the same 'proxy' network so it can resolve container names like 'web' and 'api'.
